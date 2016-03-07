@@ -11,21 +11,26 @@ function memoize (fn, Cache, serializer) {
     serializer = serializerDefault
   }
 
-  function memoized () {
+  const apply = function (fn, thisArg, ...args) {
     let cacheKey
 
-    if (arguments.length === 1) {
-      cacheKey = arguments[0]
+    if (args.length === 1) {
+      cacheKey = args[0]
     } else {
-      cacheKey = serializer(arguments)
+      cacheKey = serializer(args)
     }
 
     if (!memoized._cache.has(cacheKey)) {
-      memoized._cache.set(cacheKey, fn.apply(this, arguments))
+      memoized._cache.set(cacheKey, fn.apply(thisArg, args))
     }
 
     return memoized._cache.get(cacheKey)
   }
+
+  const memoized = new Proxy(fn, {
+    apply,
+    construct: apply
+  })
 
   memoized._cache = new Cache()
 
